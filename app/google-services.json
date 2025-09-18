@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "951382974760",
+    "project_id": "noteappeplanet-ca889",
+    "storage_bucket": "noteappeplanet-ca889.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:951382974760:android:11bbb7256c2c3800eff01d",
+        "android_client_info": {
+          "package_name": "com.mohd.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4OoNdGtfkpE_C13hmFZU-IsudSpHU05s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

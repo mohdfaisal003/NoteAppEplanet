@@ -1,6 +1,7 @@
 package com.mohd.dev.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
 import com.mohd.dev.appUtils.AppUtils
@@ -12,6 +13,7 @@ import com.mohd.dev.room.entities.Note
 class AddNoteActivity : BaseActivity() {
     private lateinit var binding: AddNoteActivityBinding
     private val notesViewModel: NoteViewModel by viewModels<NoteViewModel>()
+    private var isNetworkAvailable = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,6 +22,11 @@ class AddNoteActivity : BaseActivity() {
 
         binding.saveBtn.setOnClickListener(this)
         binding.backBtn.setOnClickListener(this)
+    }
+
+    override fun onNetworkChanged(isConnected: Boolean) {
+        Log.d( "onNetworkChanged: ", isConnected.toString())
+        isNetworkAvailable = isConnected
     }
 
     override fun onClick(view: View?) {
@@ -33,9 +40,11 @@ class AddNoteActivity : BaseActivity() {
                         AppUtils.getDeviceId(this),
                         binding.descEt.text.toString(),
                         binding.descEt.text.toString(),
-                        AppUtils.currentTime()
+                        AppUtils.currentTime(),
+                        isNetworkAvailable
                     )
                 )
+                finish()
             }
         }
     }

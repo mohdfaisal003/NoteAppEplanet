@@ -1,5 +1,7 @@
 package com.mohd.dev.room.dao
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -20,8 +22,11 @@ interface NoteDao {
     suspend fun delete(note: Note)
 
     @Query("SELECT * FROM notes WHERE userId = :userId")
-    suspend fun getSingleNoteUsingId(userId: String): Note?
+    suspend fun getSingleNote(userId: String): Note?
 
     @Query("SELECT * FROM notes")
-    fun getAllNotes(): List<Note>
+    fun getAllNotes(): LiveData<List<Note>>
+
+    @Query("SELECT * FROM notes WHERE isUploaded = 0")
+    fun getUnuploadedNotesLive(): LiveData<List<Note>>
 }

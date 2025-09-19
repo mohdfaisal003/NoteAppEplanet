@@ -59,7 +59,7 @@ dependencies {
     /* Firebase */
     implementation(platform("com.google.firebase:firebase-bom:34.2.0"))
     implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-firestore-ktx:25.1.0")
+    implementation("com.google.firebase:firebase-firestore-ktx:25.1.4")
 
     /* Retrofit */
     implementation("com.squareup.retrofit2:retrofit:3.0.0")

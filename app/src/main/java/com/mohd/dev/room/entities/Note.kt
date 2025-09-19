@@ -9,8 +9,9 @@ data class Note(
     val title: String,
     val desc: String,
     val time: String,
+    var isUploaded: Boolean,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0
 ) {
-    constructor() : this("", "", "", "", 0)
+    constructor() : this("", "", "", "", false,0)
 }

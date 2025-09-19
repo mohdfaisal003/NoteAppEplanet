@@ -2,6 +2,8 @@ package com.mohd.dev.appUtils
 
 import android.app.Activity
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.provider.Settings
 import android.view.View
 import com.google.android.material.snackbar.Snackbar
@@ -12,6 +14,17 @@ import java.util.Date
 import java.util.Locale
 
 object AppUtils {
+
+    fun isInternetAvailable(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+    }
 
     fun showMessage(context: Context,message: String) {
         val rootView = (context as Activity).findViewById<View>(android.R.id.content)

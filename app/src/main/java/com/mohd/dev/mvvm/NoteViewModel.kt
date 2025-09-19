@@ -2,6 +2,8 @@ package com.mohd.dev.mvvm
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +11,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.mohd.dev.appUtils.AppUtils
 import com.mohd.dev.base.BaseActivity
 import com.mohd.dev.firestore.FirestoreHelper
+//import com.mohd.dev.firestore.FirestoreHelper
 import com.mohd.dev.intertnetChecks.NetworkListener
 import com.mohd.dev.intertnetChecks.NetworkReceiver
 import com.mohd.dev.room.databases.NotesDatabase
@@ -20,49 +23,34 @@ import okhttp3.Dispatcher
 class NoteViewModel : ViewModel() {
 
     val firebaseHelper = FirestoreHelper()
-    private val networkReceiver = NetworkReceiver()
 
     fun repository(context: Context) = AppUtils.getRepository(context)
 
-    fun networkListener(onAvailable: suspend () -> Unit, onUnAvailable: suspend () -> Unit) {
-        networkReceiver.networkListener = object : NetworkListener {
-            override fun onNetworkChanged(isConnected: Boolean) {
-                viewModelScope.launch(Dispatchers.IO) {
-                    if (isConnected) {
-                        onAvailable()
-                    } else {
-                        onUnAvailable()
-                    }
-                }
-            }
-        }
-    }
-
     fun insertNote(context: Context,note: Note) {
         try {
-            networkListener(
-                onAvailable = {
-                    repository(context).insert(note)
-//                    firebaseHelper.insertNote(note)
-                },
-                onUnAvailable = {
-                    repository(context).insert(note)
-                })
-            AppUtils.showMessage(context,"Data Inserted UserId: " + note.userId)
+            viewModelScope.launch(Dispatchers.IO) {
+                repository(context).insert(note)
+                if (AppUtils.isInternetAvailable(context)) {
+                    firebaseHelper.insertNote(note)
+                }
+            }
+            AppUtils.showMessage(context,"Data Inserted UserId: ${note.userId}")
         } catch (exception: Exception) {
             exception.printStackTrace()
+            Log.d( "insertNote: ", exception.message.toString())
             AppUtils.showMessage(context,"Data Insertion Failed: ")
         }
     }
 
     fun updateNote(context: Context,note: Note) {
         try {
-            networkListener(onAvailable = {
+            viewModelScope.launch(Dispatchers.IO) {
                 repository(context).update(note)
-//                firebaseHelper.updateNote(note)
-            }, onUnAvailable = {
-                repository(context).update(note)
-            })
+                if (AppUtils.isInternetAvailable(context)) {
+                    firebaseHelper.updateNote(note)
+                }
+            }
+            AppUtils.showMessage(context,"Data Updated UserId: ${note.userId}")
         } catch (exception: Exception) {
             exception.printStackTrace()
         }
@@ -70,18 +58,35 @@ class NoteViewModel : ViewModel() {
 
     fun deleteNote(context: Context,note: Note) {
         try {
-            networkListener(onAvailable = {
+            viewModelScope.launch(Dispatchers.IO) {
                 repository(context).delete(note)
-//                firebaseHelper.deleteNote(note)
-            }, onUnAvailable = {
-                repository(context).delete(note)
-            })
+                if (AppUtils.isInternetAvailable(context)) {
+                    firebaseHelper.deleteNote(note)
+                }
+            }
+            AppUtils.showMessage(context,"Data Deleted Id: ${note.id}" )
         } catch (exception: Exception) {
             exception.printStackTrace()
         }
     }
 
-    fun getAll(context: Context): List<Note> {
-        return repository(context).allNotes
+    fun getAll(context: Context): LiveData<List<Note>> {
+        return repository(context).getAllNotes()
     }
+
+    fun syncUnuploadedNotes(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val notesToUpload = repository(context).getUnuploadedNotes()
+            for (note in notesToUpload) {
+                try {
+                    firebaseHelper.insertNote(note)
+                    note.isUploaded = true
+                    repository(context).update(note)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
 }

@@ -2,27 +2,33 @@ package com.mohd.dev.ui
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import com.mohd.dev.appUtils.AppUtils
 import com.mohd.dev.base.BaseActivity
 import com.mohd.dev.databinding.ActivityUpdateBinding
+import com.mohd.dev.intertnetChecks.NetworkListener
+import com.mohd.dev.intertnetChecks.NetworkReceiver
 import com.mohd.dev.mvvm.NoteViewModel
 import com.mohd.dev.room.entities.Note
 import kotlin.getValue
 
-class UpdateNoteActivity : BaseActivity() {
+class UpdateNoteActivity : AppCompatActivity(), NetworkListener {
 
     private lateinit var binding: ActivityUpdateBinding
     private val notesViewModel: NoteViewModel by viewModels<NoteViewModel>()
     private var noteId: Int = 0
     private lateinit var currentNote: Note
     private var isNetworkAvailable = false
+    private val networkReceiver = NetworkReceiver()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityUpdateBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        networkReceiver.networkListener = this
         noteId = intent.getIntExtra("id", 0)
         Log.d( "onCreate: ", noteId.toString())
 

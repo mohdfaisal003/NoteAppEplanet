@@ -21,42 +21,42 @@ import kotlinx.coroutines.launch
 import okhttp3.Dispatcher
 
 class NoteViewModel : ViewModel() {
-
     val firebaseHelper = FirestoreHelper()
-
     fun repository(context: Context) = AppUtils.getRepository(context)
-
-    fun insertNote(context: Context,note: Note) {
+    fun insertNote(context: Context, note: Note) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
                 repository(context).insert(note)
                 if (AppUtils.isInternetAvailable(context)) {
-                    firebaseHelper.insertNote(note)
+                    firebaseHelper.insertOrUpdateNote(note)
+                    note.isUploaded = true
+                    repository(context).update(note)
                 }
             }
-            AppUtils.showMessage(context,"Data Inserted UserId: ${note.userId}")
+            AppUtils.showMessage(context, "Data Inserted UserId: ${note.userId}")
         } catch (exception: Exception) {
             exception.printStackTrace()
-            Log.d( "insertNote: ", exception.message.toString())
-            AppUtils.showMessage(context,"Data Insertion Failed: ")
+            Log.d("insertNote: ", exception.message.toString())
+            AppUtils.showMessage(context, "Data Insertion Failed: ")
         }
     }
 
-    fun updateNote(context: Context,note: Note) {
+    fun updateNote(context: Context, note: Note) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
                 repository(context).update(note)
                 if (AppUtils.isInternetAvailable(context)) {
-                    firebaseHelper.updateNote(note)
+                    note.isUploaded = true
+                    firebaseHelper.insertOrUpdateNote(note)
                 }
             }
-            AppUtils.showMessage(context,"Data Updated UserId: ${note.userId}")
+            AppUtils.showMessage(context, "Data Updated UserId: ${note.userId}")
         } catch (exception: Exception) {
             exception.printStackTrace()
         }
     }
 
-    fun deleteNote(context: Context,note: Note) {
+    fun deleteNote(context: Context, note: Note) {
         try {
             viewModelScope.launch(Dispatchers.IO) {
                 repository(context).delete(note)
@@ -64,7 +64,7 @@ class NoteViewModel : ViewModel() {
                     firebaseHelper.deleteNote(note)
                 }
             }
-            AppUtils.showMessage(context,"Data Deleted Id: ${note.id}" )
+            AppUtils.showMessage(context, "Data Deleted Id: ${note.id}")
         } catch (exception: Exception) {
             exception.printStackTrace()
         }
@@ -79,7 +79,7 @@ class NoteViewModel : ViewModel() {
             val notesToUpload = repository(context).getUnuploadedNotes()
             for (note in notesToUpload) {
                 try {
-                    firebaseHelper.insertNote(note)
+                    firebaseHelper.insertOrUpdateNote(note)
                     note.isUploaded = true
                     repository(context).update(note)
                 } catch (e: Exception) {
@@ -88,5 +88,4 @@ class NoteViewModel : ViewModel() {
             }
         }
     }
-
 }

@@ -7,24 +7,26 @@ import kotlinx.coroutines.tasks.await
 class FirestoreHelper {
 
     private val firestore = FirebaseFirestore.getInstance()
-    private val notesCollection = firestore.collection("notes")
 
-    suspend fun insertNote(note: Note): String? {
-        return try {
-            val docRef = notesCollection.add(note).await()
-            docRef.id
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
+    private fun userNotesCollection(deviceId: String) =
+        firestore.collection("notes")
+            .document(deviceId)
+            .collection("user_notes")
 
-    suspend fun updateNote(note: Note): Boolean {
+    // Insert or update note
+    suspend fun insertOrUpdateNote(note: Note): Boolean {
         return try {
-            note.userId?.let {
-                notesCollection.document(it).set(note).await()
-                true
-            } ?: false
+            if (note.id == null) {
+                userNotesCollection(note.userId)
+                    .add(note)
+                    .await()
+            } else {
+                userNotesCollection(note.userId)
+                    .document(note.id.toString())
+                    .set(note)
+                    .await()
+            }
+            true
         } catch (e: Exception) {
             e.printStackTrace()
             false
@@ -33,20 +35,20 @@ class FirestoreHelper {
 
     suspend fun deleteNote(note: Note): Boolean {
         return try {
-            note.userId?.let {
-                notesCollection.document(it).delete().await()
-                true
-            } ?: false
+            userNotesCollection(note.userId)
+                .document(note.id.toString())
+                .delete()
+                .await()
+            true
         } catch (e: Exception) {
             e.printStackTrace()
             false
         }
     }
 
-    suspend fun getAllNotes(userId: String): MutableList<Note> {
+    suspend fun getAllNotes(deviceId: String): MutableList<Note> {
         return try {
-            notesCollection
-                .whereEqualTo("userId", userId)
+            userNotesCollection(deviceId)
                 .get()
                 .await()
                 .toObjects(Note::class.java)
